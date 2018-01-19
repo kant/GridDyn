@@ -34,6 +34,22 @@ install_cmake_osx () {
     export PATH="${PWD}/cmake-$1.$2.$3-Darwin-x86_64/CMake.app/Contents/bin:${PATH}"
 }
 
+install_sundials () {
+    wget http://computation.llnl.gov/projects/sundials/download/sundials-$1.$2.$3.tar.gz -P ${TRAVIS_BUILD_DIR}/tmp
+    cd ${TRAVIS_BUILD_DIR}/tmp
+    tar xzf sundials-$1.$2.$3.tar.gz
+    cd sundials-$1.$2.$3
+    mkdir build
+    cd build
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        cmake .. -DCMAKE_INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/dependencies/sundials -DCMAKE_BUILD_TYPE=Release -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_SHARED_LIBS=OFF -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF -DKLU_ENABLE=ON -DOPENMP_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu
+    elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        cmake .. -DCMAKE_INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/dependencies/sundials -DCMAKE_BUILD_TYPE=Release -DBUILD_CVODES=OFF -DBUILD_IDAS=OFF -DBUILD_SHARED_LIBS=OFF -DEXAMPLES_ENABLE=OFF -DEXAMPLES_INSTALL=OFF -DKLU_ENABLE=ON -DOPENMP_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu
+    fi
+    make
+    make install
+}
+
 # Install CMake
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     install_cmake_linux 3 4 3
@@ -49,6 +65,13 @@ if [[ ! -d "dependencies/boost" ]]; then
     install_boost 1 61 0
     echo "*** built boost successfully"
 fi
+export BOOST_ROOT=${TRAVIS_BUILD_DIR}/dependencies/boost}
+
+# Install Sundials
+if [[ ! -d "dependencies/sundials}" ]]; then
+    install_sundials 2 7 0
+fi
+export SUNDIALS_ROOT=${TRAVIS_BUILD_DIR}/dependencies/sundials}
 
 # Update library search paths
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
